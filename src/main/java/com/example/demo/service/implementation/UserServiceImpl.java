@@ -20,79 +20,71 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public List<UserDTO> findAll() {
-
         ModelMapper modelMapper = new ModelMapper();
 
-        List<UserDTO> userEntityList = userDAO.findAll()
+        return this.userDAO.findAll()
                 .stream()
-                .map(userEntity -> modelMapper.map(userEntity, UserDTO.class))
+                .map(entity -> modelMapper.map(entity, UserDTO.class))
                 .collect(Collectors.toList());
-
-        return userEntityList;
     }
 
     @Override
     public UserDTO findById(Long id) {
-
         Optional<UserEntity> userEntity = this.userDAO.findById(id);
 
-        if (userEntity.isPresent()) {
+        if(userEntity.isPresent()){
             ModelMapper modelMapper = new ModelMapper();
-            UserEntity currentUserEntity = userEntity.get();
-
-            UserDTO userDTO = modelMapper.map(currentUserEntity, UserDTO.class);
-            return userDTO;
+            UserEntity currentUser = userEntity.get();
+            return modelMapper.map(currentUser, UserDTO.class);
         } else {
             return new UserDTO();
         }
     }
 
     @Override
-    public String createUser(UserDTO userDTO) {
-        try {
-            // Convertir DTO a Entity
-            ModelMapper mapper = new ModelMapper();
-            UserEntity userEntity = mapper.map(userDTO, UserEntity.class);
+    public UserDTO createUser(UserDTO userDTO) {
 
+        try{
+            ModelMapper modelMapper = new ModelMapper();
+            UserEntity userEntity = modelMapper.map(userDTO, UserEntity.class);
             this.userDAO.saveUser(userEntity);
-
-            return "Usuario creado correctamente";
-        } catch (Exception exception) {
-            return "Error al crear el User: " + exception.getMessage();
+            return userDTO;
+        } catch (Exception e){
+            throw new UnsupportedOperationException("Error al guardar el usuario");
         }
     }
 
     @Override
-    public String updateUser(Long userId, UserDTO userDTO) {
-        // Buscar si el registro existe
-        Optional<UserEntity> currentUserOptional = this.userDAO.findById(userId);
+    public UserDTO updateUser(UserDTO userDTO, Long id) {
 
-        if (currentUserOptional.isPresent()) {
-            // Convertir DTO a Entity
-            UserEntity userEntity = currentUserOptional.get();
-            userEntity.setName(userDTO.getName());
-            userEntity.setLastName(userDTO.getLastName());
-            userEntity.setEmail(userDTO.getEmail());
-            userEntity.setAge(userDTO.getAge());
+        Optional<UserEntity> userEntity = this.userDAO.findById(id);
 
-            this.userDAO.updateUser(userEntity);
-            return "Usuario actualizado correctamente";
+        if(userEntity.isPresent()){
+            UserEntity currentUserEntity = userEntity.get();
+            currentUserEntity.setName(userDTO.getName());
+            currentUserEntity.setLastName(userDTO.getLastName());
+            currentUserEntity.setEmail(userDTO.getEmail());
+            currentUserEntity.setAge(userDTO.getAge());
 
+            this.userDAO.updateUser(currentUserEntity);
+
+            ModelMapper modelMapper = new ModelMapper();
+            return modelMapper.map(currentUserEntity, UserDTO.class);
         } else {
-            return "El usuario con ID " + userId + " no existe.";
+            throw new IllegalArgumentException("El usuario no existe");
         }
     }
 
     @Override
-    public String deleteById(Long id) {
-        Optional<UserEntity> currentUserOptional = this.userDAO.findById(id);
+    public String deleteUser(Long id) {
+        Optional<UserEntity> userEntity = this.userDAO.findById(id);
 
-        if(currentUserOptional.isPresent()){
-            UserEntity currentUserEntity = currentUserOptional.get();
+        if(userEntity.isPresent()){
+            UserEntity currentUserEntity = userEntity.get();
             this.userDAO.deleteUser(currentUserEntity);
-            return "Usuario con ID " + id + " eliminado correctamente";
+            return "Usuario con ID " + id +" ha sido eliminado.";
         } else {
-            return "El usuario con " + id + " no existe";
+            return "El usuario con ID " + id + " no existe.";
         }
     }
 }

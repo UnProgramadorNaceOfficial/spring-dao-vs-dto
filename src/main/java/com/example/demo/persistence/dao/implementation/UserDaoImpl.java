@@ -12,37 +12,37 @@ import java.util.Optional;
 
 @Repository
 public class UserDaoImpl implements IUserDAO {
-
     @PersistenceContext
     private EntityManager em;
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<UserEntity> findById(Long id){
-        return Optional.ofNullable(em.find(UserEntity.class, id));
+    public List<UserEntity> findAll() {
+        return this.em.createQuery("SELECT u FROM UserEntity u").getResultList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserEntity> findAll(){
-        return em.createQuery("SELECT u FROM UserEntity u").getResultList();
+    public Optional<UserEntity> findById(Long id) {
+        return Optional.ofNullable(this.em.find(UserEntity.class, id));
     }
 
     @Override
     @Transactional
     public void saveUser(UserEntity userEntity) {
-        em.persist(userEntity);
+        this.em.persist(userEntity);
+        this.em.flush();
     }
 
     @Override
     @Transactional
     public void updateUser(UserEntity userEntity) {
-        em.merge(userEntity);
+        this.em.merge(userEntity);
     }
 
     @Override
     @Transactional
-    public void deleteUser(UserEntity userEntity){
-        em.remove(userEntity);
+    public void deleteUser(UserEntity userEntity) {
+        this.em.remove(userEntity);
     }
 }
